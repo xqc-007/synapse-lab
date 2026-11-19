@@ -14,6 +14,21 @@ python3 -m synapse.experiments.xor
 
 The experiment prints the loss at regular intervals and the predictions for the four XOR inputs. Results are reproducible because the model uses a fixed random seed.
 
+## Record an experiment
+
+The experiment recorder captures the initial loss, losses at fixed intervals and the final loss, including when the last epoch is not on a recording boundary. The result includes the network configuration and predictions in dataset order.
+
+```python
+from synapse.experiments.history import ExperimentConfig, run_experiment
+from synapse.experiments.xor import SAMPLES
+
+config = ExperimentConfig(epochs=6000, record_every=100, seed=7)
+result = run_experiment(SAMPLES, config)
+result.save("results/xor")
+```
+
+This writes `experiment.json` (configuration and predictions) and `metrics.csv` (epoch and mean squared error). The files are suitable for subsequent analysis and plotting. Results are deterministic for a fixed Python version and configuration.
+
 ## Run tests
 
 ```bash
