@@ -29,6 +29,23 @@ result.save("results/xor")
 
 This writes `experiment.json` (configuration and predictions) and `metrics.csv` (epoch and mean squared error). The files are suitable for subsequent analysis and plotting. Results are deterministic for a fixed Python version and configuration.
 
+## Plot training loss
+
+Generate a standalone SVG chart from recorded experiment metrics. The plot uses
+a linear scale, labelled axes and no third-party packages.
+
+```python
+from synapse.experiments.history import ExperimentConfig, run_experiment
+from synapse.experiments.xor import SAMPLES
+from synapse.visualisation.loss_plot import save_loss_svg
+
+result = run_experiment(SAMPLES, ExperimentConfig(epochs=6000, record_every=100))
+save_loss_svg(result.metrics, "results/xor/loss.svg")
+```
+
+Open `results/xor/loss.svg` in a browser or image viewer. The chart is
+generated from actual recorded losses, not illustrative data.
+
 ## Run tests
 
 ```bash
