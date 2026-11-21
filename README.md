@@ -46,6 +46,30 @@ save_loss_svg(result.metrics, "results/xor/loss.svg")
 Open `results/xor/loss.svg` in a browser or image viewer. The chart is
 generated from actual recorded losses, not illustrative data.
 
+
+## Compare training runs
+
+Plot multiple experiments on the same axes. This is useful for checking how a
+change in the hidden-layer width affects convergence. Each curve uses its
+recorded epoch positions, even when sampling intervals differ.
+
+```python
+from synapse.experiments.history import ExperimentConfig, run_experiment
+from synapse.experiments.xor import SAMPLES
+from synapse.visualisation.comparison_plot import save_comparison_svg
+
+small = run_experiment(SAMPLES, ExperimentConfig(hidden_size=3, epochs=2000))
+large = run_experiment(SAMPLES, ExperimentConfig(hidden_size=8, epochs=2000))
+save_comparison_svg(
+    {"3 hidden units": small.metrics, "8 hidden units": large.metrics},
+    "results/xor/comparison.svg",
+)
+```
+
+The output is a standalone SVG with a shared linear loss scale, a legend and
+labelled axes. The comparison is descriptive; a single seed is not enough to
+establish that one architecture consistently outperforms another.
+
 ## Run tests
 
 ```bash
