@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import math
 import statistics
 from dataclasses import dataclass
 from typing import Sequence
 
-from synapse.experiments.history import ExperimentConfig, ExperimentResult, Sample, run_experiment
+from synapse.experiments.history import ExperimentConfig, Sample, run_experiment
 
 
 @dataclass(frozen=True)
