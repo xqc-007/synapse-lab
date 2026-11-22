@@ -70,6 +70,28 @@ The output is a standalone SVG with a shared linear loss scale, a legend and
 labelled axes. The comparison is descriptive; a single seed is not enough to
 establish that one architecture consistently outperforms another.
 
+## Compare random initialisations
+
+A single training run can give a misleading impression of model performance.
+Run the same configuration with several random seeds and report the spread in
+final mean squared error:
+
+```python
+from synapse.experiments.seed_comparison import compare_seeds
+from synapse.experiments.xor import SAMPLES
+
+summary = compare_seeds(
+    SAMPLES, hidden_size=6, seeds=[3, 7, 11, 19, 23], epochs=2000
+)
+print(f"Mean final MSE: {summary.mean_loss:.6f}")
+print(f"Standard deviation: {summary.standard_deviation:.6f}")
+print(f"Range: {summary.minimum_loss:.6f}–{summary.maximum_loss:.6f}")
+```
+
+The standard deviation describes the observed runs; it is not a confidence
+interval or proof that one architecture is better than another. Compare
+architectures using the same seed set and training budget.
+
 ## Run tests
 
 ```bash
