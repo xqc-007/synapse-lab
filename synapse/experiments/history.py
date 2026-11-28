@@ -43,6 +43,8 @@ class ExperimentResult:
     config: ExperimentConfig
     metrics: tuple[Metric, ...]
     predictions: tuple[float, ...]
+    evaluation_predictions: tuple[float, ...] | None = None
+    evaluation_loss: float | None = None
 
     def save(self, directory: str | Path) -> None:
         """Write metadata and a chart-ready CSV to the chosen directory."""
@@ -53,6 +55,9 @@ class ExperimentResult:
             "predictions": list(self.predictions),
             "metric": "mean_squared_error",
         }
+        if self.evaluation_predictions is not None:
+            metadata["evaluation_predictions"] = list(self.evaluation_predictions)
+            metadata["evaluation_loss"] = self.evaluation_loss
         (destination / "experiment.json").write_text(
             json.dumps(metadata, indent=2) + "\n", encoding="utf-8"
         )
@@ -65,14 +70,17 @@ class ExperimentResult:
 
 
 def run_experiment(
-    samples: Sequence[Sample], config: ExperimentConfig
+    samples: Sequence[Sample], config: ExperimentConfig,
+    *, evaluation_samples: Sequence[Sample] | None = None,
 ) -> ExperimentResult:
     """Train the network and record the initial and sampled losses."""
     if not samples:
         raise ValueError("The dataset cannot be empty.")
 
     # Validate the entire dataset before any training takes place.
-    for inputs, target in samples:
+    if evaluation_samples is not None and not evaluation_samples:
+        raise ValueError("The evaluation dataset cannot be empty.")
+    for inputs, target in (*samples, *(evaluation_samples or ())):
         if len(inputs) != config.input_size:
             raise ValueError("Sample dimensions do not match the configuration.")
         if not all(math.isfinite(value) for value in inputs):
@@ -96,4 +104,7 @@ def run_experiment(
         config=config,
         metrics=tuple(metrics),
         predictions=tuple(network.predict(inputs) for inputs, _ in samples),
+        evaluation_predictions=(None if evaluation_samples is None else
+                                tuple(network.predict(inputs) for inputs, _ in evaluation_samples)),
+        evaluation_loss=(None if evaluation_samples is None else network.loss(evaluation_samples)),
     )
