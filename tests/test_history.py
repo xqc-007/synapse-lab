@@ -47,6 +47,29 @@ class ExperimentHistoryTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             run_experiment([([0.0, 1.0], 2.0)], ExperimentConfig())
 
+    def test_evaluation_does_not_change_training(self):
+        config = ExperimentConfig(epochs=10)
+        evaluation = [([0.2, 0.8], 1.0), ([0.9, 0.9], 0.0)]
+        baseline = run_experiment(XOR, config)
+        result = run_experiment(XOR, config, evaluation_samples=evaluation)
+        self.assertEqual(result.metrics, baseline.metrics)
+        self.assertEqual(result.predictions, baseline.predictions)
+        self.assertIsNone(baseline.evaluation_predictions)
+        self.assertEqual(len(result.evaluation_predictions), 2)
+        expected = sum((p - y) ** 2 for p, (_, y) in
+                       zip(result.evaluation_predictions, evaluation)) / 2
+        self.assertAlmostEqual(result.evaluation_loss, expected)
+        with tempfile.TemporaryDirectory() as directory:
+            result.save(directory)
+            metadata = json.loads((Path(directory) / "experiment.json").read_text())
+            self.assertEqual(metadata["evaluation_loss"], result.evaluation_loss)
+
+    def test_invalid_evaluation_samples(self):
+        config = ExperimentConfig(epochs=0)
+        for samples in ([], [([0.0], 1.0)], [([0.0, 1.0], 2.0)]):
+            with self.subTest(samples=samples), self.assertRaises(ValueError):
+                run_experiment(XOR, config, evaluation_samples=samples)
+
     def test_exports_machine_readable_files(self):
         result = run_experiment(XOR, ExperimentConfig(epochs=5, record_every=2))
         with tempfile.TemporaryDirectory() as temporary:
